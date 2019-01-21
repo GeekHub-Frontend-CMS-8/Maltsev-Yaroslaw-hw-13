@@ -1,0 +1,35 @@
+@import 'utils/_variabels.sass'
+@import 'utils/_mixins.sass'
+@import 'utils/_global.sass'
+.todos
+	padding: 50px
+	// border: 1px solid red
+	&__create
+		+flex-flow(column nowrap)
+		width: 50%
+		*
+			margin-bottom: 15px
+			display: none
+	&__list
+		padding: 20px 0 20px 5px
+		margin-top: 50px
+		// border: 1px solid blue
+	&__item
+		+flex-justify-align-flow(space-between, center, row wrap)
+		padding: 20px 0
+		width: 80%
+		border-bottom: 1px solid #3e3e3d
+	&__name
+		width: 100%
+	&__desc
+		width: 65%
+		border: 0
+.button
+	&-item
+		padding: 10px 15px
+	&-list
+		+flex-justify-align-flow(space-around, center, row nowrap)
+		// border: 1px solid violet
+		width: 30%
+	&__new
+		margin-bottom: 50px
