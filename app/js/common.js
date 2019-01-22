@@ -1,19 +1,27 @@
 let
 todoDescList = [],
-indexList = 0,
 list = $('.todos__list'),
-todoObject = {
-	desc: todoDescList
-};
+findList = '.todos__list',
+doc = $(document),
+localStorageValue = localStorage.getItem("text");
 
-function createWindowOpen (button) {
+
+if (localStorageValue === null) {
+	todoDescList = [];
+}
+else {
+	todoDescList = localStorageValue.slice(2, localStorageValue.length - 2).split('","');
+	render()
+}
+
+function createWindowOpen (button) { //Open window to create ToDo's
 	$(button).on('click', function(){
 		$('.todos__create textarea').val('');
 		$('.todos__create *').css('display', 'flex');
 	})
 }
 
-function createWindowClose(button) {
+function createWindowClose(button) { //Close window to create ToDo's
 	$(button).on('click', function(){
 		$('.todos__create textarea').val('');
 		$('.todos__create *').css('display', 'none');
@@ -24,7 +32,7 @@ createWindowOpen('.button__new');
 createWindowClose('#button__cancel');
 
 function render() {
-	$('.todos__list').empty();
+	list.empty();
 
 	$.each(todoDescList, function(indexDel, indexEdit) {
 		list.prepend(`
@@ -43,53 +51,71 @@ function render() {
 	});
 }
 
-$('#create-new').on('click', function(){
-	let	text = $('#todoDescNew');
-	$('.todos__list').empty();
-	todoDescList.push(text[0].value);
-	text.val('');
+function addToLocal() {
+	localStorage.clear();
+	localStorage.setItem("text", JSON.stringify(todoDescList));
+}
 
+$('#create-new').on('click', function(){ //Create new ToDo's
+	let	text = $('#todoDescNew');
+	list.empty();
+	if (text[0].value == '') {
+		text.attr('placeholder','String is empty!').css('border', '1px solid red')
+	}
+	else {
+		text.attr('placeholder','Name').css('border', '1px solid gray')
+		todoDescList.push(text[0].value); //Add value to list
+		text.val(''); // Clear
+		addToLocal()	
+	}
 	render();
-	createWindowClose(this);
 })
 
-function remove(index) {
-	todoDescList.splice(index, 1);
-	render();
-};
+/*
+------------Edit button--------------
+*/
 
-let edit = false,
-		doc = $(document);
+let edit = false;
 
-doc.on('click', '.todos__item .button__edit', function(){
+doc.on('click', '.todos__item .button__edit', function(){ //Edit function
 	if (edit == false){
 		$(this).html('Save');
-		$(this).siblings('.todos__desc').css('border', '1px solid #ededed').removeAttr('readonly');
+		$(this).siblings('.todos__desc').css('border', '1px solid #ededed').removeAttr('readonly'); //Teaxtare view
 		edit = true;
 	}
 	else if (edit == true){
-		let index = $(this).siblings('.button__del').data('index'),		
+		let index = $(this).siblings('.button__del').data('index'), // Index in data-atribute of item 
 				value = $(this).siblings('.todos__desc').val();
 
 		$(this).html('Edit');
 
 		todoDescList.push(value)
-		todoDescList.splice(index, 1);
+		todoDescList.splice(index, 1); // Value delete
 		render();
+
+		addToLocal();
 
 		edit = false;
 		$(this).siblings('.todos__desc').css('border', '0').attr('readonly');
 	};
 });
 
+/*
+------------Delete button--------------
+*/
 
-doc.on('click', '.todos__item .button__del', function() {
+doc.on('click', '.todos__item .button__del', function() { // For delete-button
 	let index = $(this).data('index')
-	remove(index)
+	todoDescList.splice(index, 1);
+	render();
+	addToLocal();
 });
 
-let done;
-done = false;
+let done = false;
+
+/*
+------------Done button--------------
+*/
 
 doc.on('click', '.todos__item .button__done', function(){
 	if (done == false){
