@@ -1,5 +1,6 @@
 let
 todoDescList = [],
+ajaxList = [],
 list = $('.todos__list'),
 findList = '.todos__list',
 doc = $(document),
@@ -35,19 +36,21 @@ function render() {
 	list.empty();
 
 	$.each(todoDescList, function(indexDel, indexEdit) {
-		list.prepend(`
-			<li class="todos__item"> 
-				<textarea class="todos__desc" readonly>${this}</textarea>
-				<button class="button button-item button__edit" data-index="${indexEdit}">
-					Edit
-				</button>
-				<button class="button button-item button__del" data-index="${indexDel}">
-					Del
-				</button>
-				<button class="button button-item button__done">
-					Done
-				</button>
-			</li>`)
+		if (!('' in todoDescList)){
+			list.prepend(`
+				<li class="todos__item"> 
+					<textarea class="todos__desc" readonly>${this}</textarea>
+					<button class="button button-item button__edit" data-index="${indexEdit}">
+						Edit
+					</button>
+					<button class="button button-item button__del" data-index="${indexDel}">
+						Del
+					</button>
+					<button class="button button-item button__done">
+						Done
+					</button>
+				</li>`)
+		}
 	});
 }
 
@@ -120,7 +123,7 @@ let done = false;
 doc.on('click', '.todos__item .button__done', function(){
 	if (done == false){
 		done = true
-		$(this).siblings('.todos__desc').css('text-decoration', 'line-through');
+		$(this).siblings('.todos__desc').css('text-decoration', 'line-through').css('background', 'green').css('color', 'white');
 		$(this).html('Not done')
 	}
 	else if (done == true){
@@ -129,3 +132,40 @@ doc.on('click', '.todos__item .button__done', function(){
 		$(this).html('Done')
 	}	
 })
+
+/*
+------------Load more button--------------
+*/
+$('.load-more').on('click', function(){
+	$.get('https://jsonplaceholder.typicode.com/todos', '', dataList)
+	.complete(function() {
+		dataList()
+	})
+})
+
+function dataList(data) {
+	let todoNumber, processList, arrr = [];
+
+	processList = data;
+	console.log(processList);
+	while (true){
+		todoNumber = Number(prompt('How much ToDo\'s? ', ''));
+		if (todoNumber > processList.length) {
+			alert('To much')
+		}
+		else if (todoNumber <= 0) {
+			alert('To few')
+		}
+		else {
+			break
+		}
+	}
+	ajaxList = processList.slice(0, todoNumber);
+	let i = 0;
+	$.each(ajaxList, function() {
+		todoDescList.push(ajaxList[i].title);
+		i++;
+	})
+	render()
+	addToLocal()
+}
