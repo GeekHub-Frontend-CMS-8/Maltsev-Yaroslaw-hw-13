@@ -6,10 +6,17 @@ findList = '.todos__list',
 doc = $(document),
 localStorageValue = localStorage.getItem("text");
 
+function editedStyle (data) {
+	if (data == true) {
+		return 'block'
+	}
+	else {
+		return 'none'
+	}	
+}
 
 if (localStorageValue === null) {
 	todoDescList = [];
-	render()
 }
 else {
 	todoDescList = JSON.parse(localStorageValue);
@@ -35,11 +42,11 @@ createWindowClose('#button__cancel');
 
 let indexForRender = 0;
 
-function isDone(change, valueIfFalse, valueIfTrue) {
-	if (change == false){
+function isDone(data, valueIfFalse, valueIfTrue) {
+	if (data == false){
 		return valueIfFalse
 	}				
-	else if (change == true) {
+	else if (data == true) {
 		return valueIfTrue
 	}
 }
@@ -49,8 +56,8 @@ function render() {
 	let i = 0;
 	$.each(todoDescList, function(indexDel, indexEdit) {
 			list.prepend(`
-				<li class="todos__item" style="${isDone(todoDescList[i].completed, "", "background: green")}"> 
-					<textarea class="todos__desc" readonly style="${isDone(todoDescList[i].completed, "", "text-decoration: line-through")}">${todoDescList[i].title}</textarea>
+				<li class="todos__item" style="${isDone(todoDescList[i].completed, "", "background: rgba(0, 128, 0, 0.6)")}"> 
+					<textarea class="todos__desc" readonly style="${isDone(todoDescList[i].completed, "", "text-decoration: line-through; background: transparent; color: #fff;")}">${todoDescList[i].title}</textarea>
 					<button class="button button-item button__edit" data-index="${indexEdit}">
 						Edit
 					</button>
@@ -60,6 +67,7 @@ function render() {
 					<button class="button button-item button__done">
 						${isDone(todoDescList[i].completed, "Done", "Not Done")}
 					</button>
+					<p class="edited" style="width: 100%; text-align: left; display: ${editedStyle(todoDescList[i].edited)}; ${isDone(todoDescList[i].completed, "", "color: #fff")}">edited</p>
 				</li>`)
 			i++;
 	});
@@ -85,7 +93,8 @@ $('#create-new').on('click', function(){ //Create new ToDo's
 
 		todoDescList.push({
 				title: text[0].value,
-				completed: false
+				completed: false,
+				edited: false
 			}); //Add value to list
 
 		text.val(''); // Clear
@@ -115,6 +124,8 @@ doc.on('click', '.todos__item .button__edit', function(){ //Edit function
 		todoDescList[index].title = value;
 
 		// todoDescList[index].completed = false; - reset "done" when saving changes
+
+		todoDescList[index].edited = true;
 
 		render();
 
@@ -154,11 +165,8 @@ doc.on('click', '.todos__item .button__done', function(){
 		todoDescList[$(this).siblings('.button__del').data('index')].completed = false;
 
 	}
-	console.log(todoDescList)
 	render()	
 	addToLocal();
-	// todoDescList = JSON.parse(localStorageValue);
-	// console.log(JSON.parse(localStorageValue))
 })
 
 /*
@@ -191,7 +199,7 @@ function dataList(data) {
 	ajaxList = processList.slice(0, todoNumber);
 	let i = 0;
 	$.each(ajaxList, function() {
-		todoDescList.push(ajaxList[i]);
+		todoDescList.unshift(ajaxList[i]);
 		i++;
 	})
 	render()
