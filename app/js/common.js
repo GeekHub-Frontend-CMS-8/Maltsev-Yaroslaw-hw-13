@@ -9,9 +9,10 @@ localStorageValue = localStorage.getItem("text");
 
 if (localStorageValue === null) {
 	todoDescList = [];
+	render()
 }
 else {
-	todoDescList = localStorageValue.slice(2, localStorageValue.length - 2).split('","');
+	todoDescList = JSON.parse(localStorageValue);
 	render()
 }
 
@@ -32,14 +33,24 @@ function createWindowClose(button) { //Close window to create ToDo's
 createWindowOpen('.button__new');
 createWindowClose('#button__cancel');
 
+let indexForRender = 0;
+
+function isDone(change, valueIfFalse, valueIfTrue) {
+	if (change == false){
+		return valueIfFalse
+	}				
+	else if (change == true) {
+		return valueIfTrue
+	}
+}
+
 function render() {
 	list.empty();
-
+	let i = 0;
 	$.each(todoDescList, function(indexDel, indexEdit) {
-		if (!('' in todoDescList)){
 			list.prepend(`
-				<li class="todos__item"> 
-					<textarea class="todos__desc" readonly>${this}</textarea>
+				<li class="todos__item" style="${isDone(todoDescList[i].completed, "", "background: green")}"> 
+					<textarea class="todos__desc" readonly style="${isDone(todoDescList[i].completed, "", "text-decoration: line-through")}">${todoDescList[i].title}</textarea>
 					<button class="button button-item button__edit" data-index="${indexEdit}">
 						Edit
 					</button>
@@ -47,10 +58,10 @@ function render() {
 						Del
 					</button>
 					<button class="button button-item button__done">
-						Done
+						${isDone(todoDescList[i].completed, "Done", "Not Done")}
 					</button>
 				</li>`)
-		}
+			i++;
 	});
 }
 
@@ -58,6 +69,10 @@ function addToLocal() {
 	localStorage.clear();
 	localStorage.setItem("text", JSON.stringify(todoDescList));
 }
+
+/*
+------------Create button--------------
+*/
 
 $('#create-new').on('click', function(){ //Create new ToDo's
 	let	text = $('#todoDescNew');
@@ -67,7 +82,12 @@ $('#create-new').on('click', function(){ //Create new ToDo's
 	}
 	else {
 		text.attr('placeholder','Name').css('border', '1px solid gray')
-		todoDescList.push(text[0].value); //Add value to list
+
+		todoDescList.push({
+				title: text[0].value,
+				completed: false
+			}); //Add value to list
+
 		text.val(''); // Clear
 		addToLocal()	
 	}
@@ -87,13 +107,15 @@ doc.on('click', '.todos__item .button__edit', function(){ //Edit function
 		edit = true;
 	}
 	else if (edit == true){
-		let index = $(this).siblings('.button__del').data('index'), // Index in data-atribute of item 
+		let index = $(this).siblings('.button__del').data('index'),
 				value = $(this).siblings('.todos__desc').val();
 
 		$(this).html('Edit');
 
-		todoDescList.push(value)
-		todoDescList.splice(index, 1); // Value delete
+		todoDescList[index].title = value;
+
+		// todoDescList[index].completed = false; - reset "done" when saving changes
+
 		render();
 
 		addToLocal();
@@ -114,28 +136,35 @@ doc.on('click', '.todos__item .button__del', function() { // For delete-button
 	addToLocal();
 });
 
-let done = false;
-
 /*
 ------------Done button--------------
 */
 
 doc.on('click', '.todos__item .button__done', function(){
+
+	let done = todoDescList[$(this).siblings('.button__del').data('index')].completed;
+
 	if (done == false){
-		done = true
-		$(this).siblings('.todos__desc').css('text-decoration', 'line-through').css('background', 'green').css('color', 'white');
-		$(this).html('Not done')
+
+		todoDescList[$(this).siblings('.button__del').data('index')].completed = true;
+
 	}
 	else if (done == true){
-		done = false
-		$(this).siblings('.todos__desc').css('text-decoration', 'none');
-		$(this).html('Done')
-	}	
+
+		todoDescList[$(this).siblings('.button__del').data('index')].completed = false;
+
+	}
+	console.log(todoDescList)
+	render()	
+	addToLocal();
+	// todoDescList = JSON.parse(localStorageValue);
+	// console.log(JSON.parse(localStorageValue))
 })
 
 /*
 ------------Load more button--------------
 */
+
 $('.load-more').on('click', function(){
 	$.get('https://jsonplaceholder.typicode.com/todos', '', dataList)
 	.complete(function() {
@@ -144,10 +173,9 @@ $('.load-more').on('click', function(){
 })
 
 function dataList(data) {
-	let todoNumber, processList, arrr = [];
+	let todoNumber, processList;
 
 	processList = data;
-	console.log(processList);
 	while (true){
 		todoNumber = Number(prompt('How much ToDo\'s? ', ''));
 		if (todoNumber > processList.length) {
@@ -163,9 +191,19 @@ function dataList(data) {
 	ajaxList = processList.slice(0, todoNumber);
 	let i = 0;
 	$.each(ajaxList, function() {
-		todoDescList.push(ajaxList[i].title);
+		todoDescList.push(ajaxList[i]);
 		i++;
 	})
 	render()
 	addToLocal()
 }
+
+/*
+------------Clear button--------------
+*/
+
+$('.clear').on('click', function() {
+	todoDescList = [];
+	localStorage.clear();
+	render();
+})
